@@ -1,0 +1,45 @@
+service: s3-tryal
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  timeout: 10
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+        - "s3:GetObject"
+        - "s3:PutObject"
+        - "s3:DeleteObject"
+      Resource:
+        - "*"
+  environment:
+    BUCKET: ${self:service}-${self:provider.stage}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - "*"
+
+functions:
+  uploadImage:
+    handler: handler.upload
+    events:
+      - httpApi:
+          path: /upload
+          method: post
+  getImage:
+    handler: handler.getImage
+    events:
+      - httpApi:
+          path: /get
+          method: get
+
+resources:
+  Resources:
+    Bucket1:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.BUCKET}
